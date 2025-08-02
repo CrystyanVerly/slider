@@ -1,0 +1,21 @@
+body {
+  /* disposable */
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+#slider-wrapper {
+  overflow: hidden;
+}
+
+#slider-track {
+  display: flex;
+}
+
+#slider-track li {
+  flex-shrink: 0;
+  width: 60vw;
+  max-width: 900px;
+}
