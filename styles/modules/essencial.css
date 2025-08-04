@@ -12,6 +12,7 @@ body {
 
 #slider-track {
   display: flex;
+  will-change: tranform;
 }
 
 #slider-track li {
