@@ -2,63 +2,44 @@ export default class Slider {
   constructor(wrapper, rail) {
     this.wrapper = document.querySelector(wrapper);
     this.rail = document.querySelector(rail);
-    this.distances = {
-      initial: 0,
-      moving: 0,
-      final: 0,
-      lastPosition: 0,
-    };
+    this.distances = { initial: 0, moving: 0, final: 0 };
+    this.bindingMethods();
   }
-
-  addRailEvents() {
-    this.rail.addEventListener('mousedown', this.onInitial);
+  moveSlide(distX) {
+    this.distances.moving = distX;
+    this.rail.style.transform = `translate3d(${distX}px, 0px, 0px)`;
   }
-
-  onInitial(e) {
+  updatePosition(currentX) {
+    const calcDist = -Math.round((this.distances.initial - currentX) * 1.6);
+    this.distances.moving = calcDist;
+    return this.distances.final + calcDist;
+  }
+  onFinal() {
+    this.distances.final = this.distances.moving;
+    this.wrapper.removeEventListener('mousemove', this.onMoving);
+    this.wrapper.removeEventListener('mouseup', this.onFinal);
+  }
+  onMoving(e) {
+    this.moveSlide(this.updatePosition(e.clientX));
+  }
+  onStart(e) {
     e.preventDefault();
     this.distances.initial = e.clientX;
-    this.rail.addEventListener('mousemove', this.onMoving);
-    this.rail.addEventListener('mouseup', this.onFinal);
+    this.wrapper.addEventListener('mousemove', this.onMoving);
+    this.wrapper.addEventListener('mouseup', this.onFinal);
   }
-
-  onMoving(e) {
-    const distanceTraveled = this.distanceTracker(e.clientX);
-    this.moveItems(distanceTraveled);
+  addStartEvent() {
+    this.wrapper.addEventListener('mousedown', this.onStart);
   }
-
-  onFinal(e) {
-    this.distances.final = this.distances.lastPosition;
-    this.rail.removeEventListener('mousemove', this.onMoving);
-    this.rail.removeEventListener('mouseup', this.onFinal);
-  }
-
-  distanceTracker(currentX) {
-    const calculedDistance = -(
-      (this.distances.initial - currentX) *
-      1.6
-    ).toFixed();
-    this.distances.moving = calculedDistance;
-    console.log(this.distances);
-
-    return this.distances.final + calculedDistance;
-  }
-
-  moveItems(distanceTraveled) {
-    this.distances.lastPosition = distanceTraveled;
-    this.rail.style.transform = `translate3d(${distanceTraveled}px, 0px, 0px)`;
-  }
-
   bindingMethods() {
-    ['onInitial', 'onMoving', 'onFinal'].forEach(
-      (method) => (this[method] = this[method].bind(this)),
-    );
+    const methodsToBind = ['onStart', 'onMoving', 'onFinal'];
+    methodsToBind.forEach((method) => (this[method] = this[method].bind(this)));
   }
-
   init() {
-    this.bindingMethods();
-    if (this.rail) {
-      this.addRailEvents();
+    if (this.wrapper && this.rail) {
+      this.addStartEvent();
+    } else {
+      console.warn(`No wrapper or rail found.`);
     }
-    return this;
   }
 }

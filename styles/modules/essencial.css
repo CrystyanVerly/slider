@@ -8,11 +8,11 @@ body {
 
 #slider-wrapper {
   overflow: hidden;
+  will-change: tranform;
 }
 
 #slider-track {
   display: flex;
-  will-change: tranform;
 }
 
 #slider-track li {

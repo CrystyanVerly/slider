@@ -1,0 +1,98 @@
+# ========================
+# Sistema / Ambiente
+# ========================
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================
+# Editor / IDE
+# ========================
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ========================
+# Node.js
+# ========================
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ========================
+# Build / Output
+# ========================
+dist/
+build/
+out/
+coverage/
+tmp/
+temp/
+.cache/
+*.tsbuildinfo
+
+# ========================
+# Vite / Webpack / Rollup
+# ========================
+.vite/
+vite.config.ts
+vite.config.js
+
+# ========================
+# Testes
+# ========================
+coverage/
+jest-html-reporters-*.html
+*.lcov
+
+# ========================
+# ESLint / Prettier
+# ========================
+.eslintcache
+.prettiercache
+
+# ========================
+# Imagens / Mídias temporárias
+# ========================
+*.webp
+*.jpeg
+*.jpg
+*.png
+*.svg
+*.gif
+
+# ========================
+# Ambientes
+# ========================
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ========================
+# Arquivos temporários / swap
+# ========================
+*.swp
+*.bak
+*.tmp
+*.temp
+*.old
+
+# ========================
+# Sistema operacional
+# ========================
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# ========================
+# Git
+# ========================
+.git/
