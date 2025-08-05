@@ -1,3 +1,4 @@
+import throttle from './throttle.js';
 export default class Slider {
   constructor(wrapper, rail) {
     this.wrapper = document.querySelector(wrapper);
@@ -32,8 +33,10 @@ export default class Slider {
     this.wrapper.addEventListener('mousedown', this.onStart);
   }
   bindingMethods() {
-    const methodsToBind = ['onStart', 'onMoving', 'onFinal'];
+    const methodsToBind = ['onStart', 'onFinal'];
     methodsToBind.forEach((method) => (this[method] = this[method].bind(this)));
+
+    this.onMoving = throttle(this.onMoving.bind(this), 16);
   }
   init() {
     if (this.wrapper && this.rail) {

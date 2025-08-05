@@ -8,6 +8,8 @@ body {
 
 #slider-wrapper {
   overflow: hidden;
+}
+#slider-wrapper:hover {
   will-change: tranform;
 }
 
