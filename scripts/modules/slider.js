@@ -4,6 +4,7 @@ export default class Slider {
     this.wrapper = document.querySelector(wrapper);
     this.rail = document.querySelector(rail);
     this.distances = { initial: 0, moving: 0, final: 0 };
+
     this.bindingMethods();
   }
   moveSlide(distX) {
@@ -17,20 +18,22 @@ export default class Slider {
   }
   onFinal() {
     this.distances.final = this.distances.moving;
-    this.wrapper.removeEventListener('mousemove', this.onMoving);
-    this.wrapper.removeEventListener('mouseup', this.onFinal);
+    this.wrapper.removeEventListener('pointermove', this.onMoving);
+    this.wrapper.removeEventListener('pointerup', this.onFinal);
   }
   onMoving(e) {
     this.moveSlide(this.updatePosition(e.clientX));
   }
   onStart(e) {
-    e.preventDefault();
+    if (e.pointerType !== 'touch') e.preventDefault();
+    if (e.pointerType === 'touch' && e.isPrimary === false) return;
+
     this.distances.initial = e.clientX;
-    this.wrapper.addEventListener('mousemove', this.onMoving);
-    this.wrapper.addEventListener('mouseup', this.onFinal);
+    this.wrapper.addEventListener('pointermove', this.onMoving);
+    this.wrapper.addEventListener('pointerup', this.onFinal);
   }
   addStartEvent() {
-    this.wrapper.addEventListener('mousedown', this.onStart);
+    this.wrapper.addEventListener('pointerdown', this.onStart);
   }
   bindingMethods() {
     const methodsToBind = ['onStart', 'onFinal'];
@@ -41,8 +44,6 @@ export default class Slider {
   init() {
     if (this.wrapper && this.rail) {
       this.addStartEvent();
-    } else {
-      console.warn(`No wrapper or rail found.`);
-    }
+    } else console.warn(`No wrapper or rail found.`);
   }
 }
