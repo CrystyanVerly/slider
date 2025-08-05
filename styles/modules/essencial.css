@@ -1,24 +1,23 @@
-body {
-  /* disposable */
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-}
-
 #slider-wrapper {
   overflow: hidden;
-}
-#slider-wrapper:hover {
-  will-change: tranform;
+  height: 90vh;
+  width: 100vw;
+  margin: auto;
 }
 
 #slider-track {
   display: flex;
+  height: 100%;
+  width: 100%;
+  will-change: transform;
+  transition: transform 0.1s ease;
 }
 
 #slider-track li {
   flex-shrink: 0;
-  width: 60vw;
-  max-width: 900px;
+  width: 100%;
+}
+
+#slider-track li img {
+  width: 100%;
 }
