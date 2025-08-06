@@ -54,6 +54,8 @@ export default class Slider {
       next,
     });
   }
+  goToPrev() {}
+  goToNext() {}
   onFinal() {
     this.distances.final = this.distances.moving;
     this.wrapper.removeEventListener('pointermove', this.onMoving);
