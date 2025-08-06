@@ -4,17 +4,28 @@ export default class Slider {
     this.wrapper = document.querySelector(wrapper);
     this.rail = document.querySelector(rail);
     this.distances = { initial: 0, moving: 0, final: 0 };
+    this.index = { prev: null, active: 0, next: null };
 
     this.config = {
       isInfinit: false,
+      initialItem: 0,
+      prevControl: null,
+      nextControl: null,
       ...config,
     };
+
+    if (typeof this.config.prevControl === 'string') {
+      this.config.prevControl = document.querySelector(this.config.prevControl);
+    }
+    if (typeof this.config.nextControl === 'string') {
+      this.config.nextControl = document.querySelector(this.config.nextControl);
+    }
 
     this.itemsOnRail();
     this.bindingMethods();
   }
   bindingMethods() {
-    const methodsToBind = ['onStart', 'onFinal'];
+    const methodsToBind = ['onStart', 'onFinal', 'prevItem', 'nextItem'];
     methodsToBind.forEach((method) => (this[method] = this[method].bind(this)));
 
     this.onMoving = throttle(this.onMoving.bind(this), 16);
@@ -27,59 +38,84 @@ export default class Slider {
     return this.arrItems;
   }
   updatePosition(currentX) {
-    const calcDist = -Math.round((this.distances.initial - currentX) * 1.6);
+    const calcDist = Math.round((currentX - this.distances.initial) * 1.6);
     this.distances.moving = calcDist;
     return this.distances.final + calcDist;
   }
-  moveSlide(distX) {
-    this.distances.moving = distX;
+  moveSlide(distX, transition = true) {
     this.rail.style.transform = `translate3d(${distX}px, 0px, 0px)`;
+    transition
+      ? (this.rail.style.transition = `transform .3s ease-in-out`)
+      : (this.rail.style.transition = 'none');
   }
-  changeItemTo(index) {
+  directionLogic(index) {
     const lastItem = this.arrItems.length - 1;
     const isInfinit = this.config.isInfinit;
 
     const prev = index > 0 ? index - 1 : isInfinit ? lastItem : undefined;
     const next = index < lastItem ? index + 1 : isInfinit ? 0 : undefined;
 
+    return (this.index = { prev, active: index, next });
+  }
+  changeItemTo(index) {
     if (index < this.arrItems.length) {
       const { onLeft } = this.arrItems[index];
       this.moveSlide(onLeft);
       this.distances.final = onLeft;
+      this.index = this.directionLogic(index);
     } else console.warn('Index is bigger than array length');
-
-    return (this.direction = {
-      prev,
-      active: index,
-      next,
-    });
   }
-  goToPrev() {}
-  goToNext() {}
-  onFinal() {
-    this.distances.final = this.distances.moving;
+  prevItem(e) {
+    e.preventDefault();
+    if (this.index.prev !== undefined) {
+      this.changeItemTo(this.index.prev);
+    }
+  }
+  nextItem(e) {
+    e.preventDefault();
+    if (this.index.next !== undefined) {
+      this.changeItemTo(this.index.next);
+    }
+  }
+  changeOnMoving(e) {
+    if (this.distances.moving < -120 && this.index.next !== undefined)
+      this.nextItem(e);
+    else if (this.distances.moving > 120 && this.index.prev !== undefined)
+      this.prevItem(e);
+    else this.changeItemTo(this.index.active);
+  }
+
+  onFinal(e) {
     this.wrapper.removeEventListener('pointermove', this.onMoving);
     this.wrapper.removeEventListener('pointerup', this.onFinal);
+    this.changeOnMoving(e);
+    this.distances.moving = 0;
   }
   onMoving(e) {
-    this.moveSlide(this.updatePosition(e.clientX));
+    this.moveSlide(this.updatePosition(e.clientX), false);
   }
   onStart(e) {
-    if (e.pointerType !== 'touch') e.preventDefault();
-    if (e.pointerType === 'touch' && e.isPrimary === false) return;
-
+    e.preventDefault();
     this.distances.initial = Math.round(e.clientX);
     this.wrapper.addEventListener('pointermove', this.onMoving);
     this.wrapper.addEventListener('pointerup', this.onFinal);
   }
   addStartEvent() {
-    this.wrapper.addEventListener('pointerdown', this.onStart);
+    this.wrapper.addEventListener('pointerdown', this.onStart, {
+      passive: false,
+    });
+    const controlEvent = ['click', 'touchstart'];
+    if (this.config.prevControl && this.config.nextControl)
+      controlEvent.forEach((event) => {
+        this.config.prevControl.addEventListener(event, this.prevItem);
+        this.config.nextControl.addEventListener(event, this.nextItem);
+      });
   }
 
   init() {
     if (this.wrapper && this.rail) {
       this.addStartEvent();
-      this.changeItemTo(5);
+      this.changeItemTo(this.config.initialItem);
     } else console.warn(`No wrapper or rail found.`);
   }
 }
