@@ -3,6 +3,7 @@
   height: 90vh;
   width: 100vw;
   margin: auto;
+  touch-action: pan-y;
 }
 
 #slider-track {

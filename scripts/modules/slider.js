@@ -78,9 +78,10 @@ export default class Slider {
     }
   }
   changeOnMoving(e) {
-    if (this.distances.moving < -120 && this.index.next !== undefined)
+    const minMove = this.wrapper.offsetWidth * 0.07;
+    if (this.distances.moving < -minMove && this.index.next !== undefined)
       this.nextItem(e);
-    else if (this.distances.moving > 120 && this.index.prev !== undefined)
+    else if (this.distances.moving > minMove && this.index.prev !== undefined)
       this.prevItem(e);
     else this.changeItemTo(this.index.active);
   }
