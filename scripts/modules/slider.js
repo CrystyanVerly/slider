@@ -63,6 +63,10 @@ export default class Slider {
     }
   }
 
+  updateOnResize() {
+    window.addEventListener('resize', this.onResizing);
+  }
+
   itemsOnRail() {
     this.arrItems = [...this.rail.children].map((item) => {
       const onLeft = -item.offsetLeft;
@@ -71,20 +75,7 @@ export default class Slider {
     return this.arrItems;
   }
 
-  // ==== MOVIMENT ====
-  updatePosition(currentX) {
-    const calcDist = Math.round((currentX - this.distances.initial) * 1.6);
-    this.distances.moving = calcDist;
-    return this.distances.final + calcDist;
-  }
-
-  moveSlide(distX, transition = true) {
-    this.rail.style.transform = `translate3d(${distX}px, 0px, 0px)`;
-    this.rail.style.transition = transition
-      ? 'transform .3s ease-in-out'
-      : 'none';
-  }
-
+  // ==== ITEM CHANGE ====
   changeItemTo(index) {
     if (index < this.arrItems.length) {
       const { onLeft } = this.arrItems[index];
@@ -95,26 +86,6 @@ export default class Slider {
     } else {
       console.warn('Index is bigger than array length');
     }
-  }
-
-  updateOnResize() {
-    window.addEventListener('resize', this.onResizing);
-  }
-
-  toggleActive() {
-    const elementList = this.arrItems;
-    const activeClass = this.config.activeClass;
-    elementList.forEach((el) => el.item.classList.remove(activeClass));
-    elementList[this.index.active].item.classList.add(activeClass);
-  }
-
-  // ==== DIRECTION LOGIC ====
-  directionLogic(index) {
-    const lastItem = this.arrItems.length - 1;
-    const isInfinit = this.config.isInfinit;
-    const prev = index > 0 ? index - 1 : isInfinit ? lastItem : undefined;
-    const next = index < lastItem ? index + 1 : isInfinit ? 0 : undefined;
-    return (this.index = { prev, active: index, next });
   }
 
   prevItem(e) {
@@ -128,6 +99,42 @@ export default class Slider {
     e.preventDefault();
     if (this.index.next !== undefined) {
       this.changeItemTo(this.index.next);
+    }
+  }
+
+  toggleActive() {
+    const elementList = this.arrItems;
+    const activeClass = this.config.activeClass;
+    elementList.forEach((el) => el.item.classList.remove(activeClass));
+    elementList[this.index.active].item.classList.add(activeClass);
+  }
+
+  // ==== MOVEMENT ====
+  updatePosition(currentX) {
+    const calcDist = Math.round((currentX - this.distances.initial) * 1.6);
+    this.distances.moving = calcDist;
+    return this.distances.final + calcDist;
+  }
+
+  moveSlide(distX, transition = true) {
+    this.rail.style.transform = `translate3d(${distX}px, 0px, 0px)`;
+    this.rail.style.transition = transition
+      ? 'transform .3s ease-in-out'
+      : 'none';
+  }
+
+  changeOnMoving(e) {
+    const minMove = this.wrapper.offsetWidth * 0.07;
+
+    if (this.distances.moving < -minMove && this.index.next !== undefined) {
+      this.nextItem(e);
+    } else if (
+      this.distances.moving > minMove &&
+      this.index.prev !== undefined
+    ) {
+      this.prevItem(e);
+    } else {
+      this.changeItemTo(this.index.active);
     }
   }
 
@@ -150,25 +157,20 @@ export default class Slider {
     this.distances.moving = 0;
   }
 
+  // ==== RESIZE ====
   onResizing() {
     setTimeout(() => {
       this.itemsOnRail();
       this.changeItemTo(this.index.active);
-    }, 600);
+    }, 1000);
   }
 
-  changeOnMoving(e) {
-    const minMove = this.wrapper.offsetWidth * 0.07;
-
-    if (this.distances.moving < -minMove && this.index.next !== undefined) {
-      this.nextItem(e);
-    } else if (
-      this.distances.moving > minMove &&
-      this.index.prev !== undefined
-    ) {
-      this.prevItem(e);
-    } else {
-      this.changeItemTo(this.index.active);
-    }
+  // ==== DIRECTION LOGIC ====
+  directionLogic(index) {
+    const lastItem = this.arrItems.length - 1;
+    const isInfinit = this.config.isInfinit;
+    const prev = index > 0 ? index - 1 : isInfinit ? lastItem : undefined;
+    const next = index < lastItem ? index + 1 : isInfinit ? 0 : undefined;
+    return (this.index = { prev, active: index, next });
   }
 }
