@@ -32,6 +32,7 @@ export default class Slider {
     if (this.wrapper && this.rail) {
       this.addStartEvent();
       this.changeItemTo(this.config.initialItem);
+      this.updateOnResize();
     } else {
       console.warn(`No wrapper or rail found.`);
     }
@@ -45,6 +46,7 @@ export default class Slider {
     });
 
     this.onMoving = throttle(this.onMoving.bind(this), 16);
+    this.onResizing = throttle(this.onResizing.bind(this), 200);
   }
 
   addStartEvent() {
@@ -95,6 +97,10 @@ export default class Slider {
     }
   }
 
+  updateOnResize() {
+    window.addEventListener('resize', this.onResizing);
+  }
+
   toggleActive() {
     const elementList = this.arrItems;
     const activeClass = this.config.activeClass;
@@ -106,10 +112,8 @@ export default class Slider {
   directionLogic(index) {
     const lastItem = this.arrItems.length - 1;
     const isInfinit = this.config.isInfinit;
-
     const prev = index > 0 ? index - 1 : isInfinit ? lastItem : undefined;
     const next = index < lastItem ? index + 1 : isInfinit ? 0 : undefined;
-
     return (this.index = { prev, active: index, next });
   }
 
@@ -144,6 +148,13 @@ export default class Slider {
     this.wrapper.removeEventListener('pointerup', this.onFinal);
     this.changeOnMoving(e);
     this.distances.moving = 0;
+  }
+
+  onResizing() {
+    setTimeout(() => {
+      this.itemsOnRail();
+      this.changeItemTo(this.index.active);
+    }, 600);
   }
 
   changeOnMoving(e) {
