@@ -12,6 +12,7 @@ export default class Slider {
       initialItem: 0,
       prevControl: null,
       nextControl: null,
+      activeClass: 'active',
       ...config,
     };
 
@@ -88,9 +89,17 @@ export default class Slider {
       this.moveSlide(onLeft);
       this.distances.final = onLeft;
       this.index = this.directionLogic(index);
+      this.toggleActive();
     } else {
       console.warn('Index is bigger than array length');
     }
+  }
+
+  toggleActive() {
+    const elementList = this.arrItems;
+    const activeClass = this.config.activeClass;
+    elementList.forEach((el) => el.item.classList.remove(activeClass));
+    elementList[this.index.active].item.classList.add(activeClass);
   }
 
   // ==== DIRECTION LOGIC ====
