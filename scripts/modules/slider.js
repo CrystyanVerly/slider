@@ -5,11 +5,11 @@ export default class Slider {
     this.wrapper = document.querySelector(wrapper);
     this.rail = document.querySelector(rail);
     this.distances = { initial: 0, moving: 0, final: 0 };
-    this.index = { prev: null, active: 0, next: null };
+    this.index = { active: 0 };
 
     this.config = {
-      isInfinit: false,
       initialItem: 0,
+      looping: false,
       prevControl: null,
       nextControl: null,
       activeClass: 'active',
@@ -23,24 +23,30 @@ export default class Slider {
       this.config.nextControl = document.querySelector(this.config.nextControl);
     }
 
-    this.itemsOnRail();
     this.bindingMethods();
   }
 
   // ==== PUBLIC ====
   init() {
     if (this.wrapper && this.rail) {
+      this.cloneIfLooping();
+      this.itemsOnRail();
       this.addStartEvent();
-      this.changeItemTo(this.config.initialItem);
+      this.addGoToIfLooping();
       this.updateOnResize();
-    } else {
-      console.warn(`No wrapper or rail found.`);
-    }
+      this.goTo(this.config.initialItem + (this.config.looping ? 1 : 0));
+    } else console.warn(`No wrapper or rail found.`);
   }
 
   // ==== SETUP ====
   bindingMethods() {
-    const methodsToBind = ['onStart', 'onFinal', 'prevItem', 'nextItem'];
+    const methodsToBind = [
+      'onStart',
+      'onFinal',
+      'prevItem',
+      'nextItem',
+      'goToIfLooping',
+    ];
     methodsToBind.forEach((method) => {
       this[method] = this[method].bind(this);
     });
@@ -63,6 +69,10 @@ export default class Slider {
     }
   }
 
+  addGoToIfLooping() {
+    this.rail.addEventListener('transitionend', this.goToIfLooping);
+  }
+
   updateOnResize() {
     window.addEventListener('resize', this.onResizing);
   }
@@ -75,43 +85,81 @@ export default class Slider {
     return this.arrItems;
   }
 
+  cloneIfLooping() {
+    if (!this.config.looping) return;
+
+    const elements = [...this.rail.children];
+    const firstEl = elements[0];
+    const lastEl = elements[elements.length - 1];
+
+    const firstElClone = firstEl.cloneNode(true);
+    const lastElClone = lastEl.cloneNode(true);
+    const classClone = 'clonedItem';
+
+    firstElClone.classList.add(classClone);
+    lastElClone.classList.add(classClone);
+
+    this.rail.insertBefore(lastElClone, firstEl);
+    this.rail.appendChild(firstElClone);
+  }
+
   // ==== ITEM CHANGE ====
-  changeItemTo(index) {
-    if (index < this.arrItems.length) {
-      const { onLeft } = this.arrItems[index];
-      this.moveSlide(onLeft);
-      this.distances.final = onLeft;
-      this.index = this.directionLogic(index);
-      this.toggleActive();
-    } else {
-      console.warn('Index is bigger than array length');
+  goTo(index, transition = true) {
+    const arrSize = this.arrItems.length;
+    const lastIndex = arrSize - 1;
+
+    if (index < 0 || index > arrSize - 1) console.warn(`Invalid index chosen`);
+
+    if (!this.config.looping) {
+      if (index < 0) index = 0;
+      if (index > lastIndex) index = lastIndex;
     }
+
+    const { onLeft } = this.arrItems[index];
+    this.moveSlide(onLeft, transition);
+    this.distances.final = onLeft;
+    this.index.active = index;
   }
 
   prevItem(e) {
-    e.preventDefault();
-    if (this.index.prev !== undefined) {
-      this.changeItemTo(this.index.prev);
-    }
+    e?.preventDefault();
+    this.goTo(this.index.active - 1);
   }
 
   nextItem(e) {
-    e.preventDefault();
-    if (this.index.next !== undefined) {
-      this.changeItemTo(this.index.next);
-    }
+    e?.preventDefault();
+    this.goTo(this.index.active + 1);
   }
 
   toggleActive() {
     const elementList = this.arrItems;
     const activeClass = this.config.activeClass;
     elementList.forEach((el) => el.item.classList.remove(activeClass));
-    elementList[this.index.active].item.classList.add(activeClass);
+
+    const realIndex = this.getRealIndex(this.index.active);
+    const realItem = this.arrItems[realIndex];
+    console.log(realItem);
+
+    if (realItem) realItem.item.classList.add(activeClass);
+  }
+
+  goToIfLooping() {
+    const lastIndex = this.arrItems.length - 1;
+    const activeIndex = this.index.active;
+    if (!this.config.looping) {
+      this.toggleActive();
+      return;
+    }
+
+    if (activeIndex === lastIndex) this.goTo(1, false);
+    if (activeIndex === 0) this.goTo(lastIndex - 1, false);
+
+    this.toggleActive();
   }
 
   // ==== MOVEMENT ====
   updatePosition(currentX) {
-    const calcDist = Math.round((currentX - this.distances.initial) * 1.6);
+    const calcDist = Math.round((currentX - this.distances.initial) * 1.5);
     this.distances.moving = calcDist;
     return this.distances.final + calcDist;
   }
@@ -123,19 +171,11 @@ export default class Slider {
       : 'none';
   }
 
-  changeOnMoving(e) {
-    const minMove = this.wrapper.offsetWidth * 0.07;
-
-    if (this.distances.moving < -minMove && this.index.next !== undefined) {
-      this.nextItem(e);
-    } else if (
-      this.distances.moving > minMove &&
-      this.index.prev !== undefined
-    ) {
-      this.prevItem(e);
-    } else {
-      this.changeItemTo(this.index.active);
-    }
+  changeOnMoving() {
+    const minMove = this.wrapper.offsetWidth * 0.06;
+    if (this.distances.moving < -minMove) this.nextItem();
+    else if (this.distances.moving > minMove) this.prevItem();
+    else this.goTo(this.index.active);
   }
 
   // ==== EVENTS (DRAG) ====
@@ -161,16 +201,15 @@ export default class Slider {
   onResizing() {
     setTimeout(() => {
       this.itemsOnRail();
-      this.changeItemTo(this.index.active);
-    }, 1000);
+      this.goTo(this.index.active);
+    }, 500);
   }
 
-  // ==== DIRECTION LOGIC ====
-  directionLogic(index) {
-    const lastItem = this.arrItems.length - 1;
-    const isInfinit = this.config.isInfinit;
-    const prev = index > 0 ? index - 1 : isInfinit ? lastItem : undefined;
-    const next = index < lastItem ? index + 1 : isInfinit ? 0 : undefined;
-    return (this.index = { prev, active: index, next });
+  // ==== UTILS ====
+  getRealIndex(index) {
+    if (!this.config.looping) return index;
+    if (index === 0) return this.arrItems.length - 3;
+    if (index === this.arrItems.length - 1) return 0;
+    return index;
   }
 }
