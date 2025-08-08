@@ -1,56 +1,45 @@
 import throttle from './throttle.js';
 
 export default class Slider {
-  constructor(wrapper, rail, config = {}) {
+  constructor({ wrapper, rail, config = {} }) {
     this.wrapper = document.querySelector(wrapper);
     this.rail = document.querySelector(rail);
-    this.distances = { initial: 0, moving: 0, final: 0 };
-    this.index = { active: 0 };
+    if (!this.wrapper || !this.rail)
+      throw new Error(`Invalid querySelector at ${wrapper} or ${rail}`);
 
     this.config = {
-      initialItem: 0,
-      looping: false,
-      prevControl: null,
-      nextControl: null,
+      firstItem: 0,
+      looping: true,
       activeClass: 'active',
       ...config,
     };
 
-    if (typeof this.config.prevControl === 'string') {
-      this.config.prevControl = document.querySelector(this.config.prevControl);
-    }
-    if (typeof this.config.nextControl === 'string') {
-      this.config.nextControl = document.querySelector(this.config.nextControl);
-    }
+    this.distances = { initial: 0, moving: 0, final: 0 };
+    this.index = { active: 0 };
 
     this.bindingMethods();
   }
 
   // ==== PUBLIC ====
   init() {
-    if (this.wrapper && this.rail) {
-      this.cloneIfLooping();
-      this.itemsOnRail();
-      this.addStartEvent();
-      this.addGoToIfLooping();
-      this.updateOnResize();
-      this.goTo(this.config.initialItem + (this.config.looping ? 1 : 0));
-    } else console.warn(`No wrapper or rail found.`);
+    this.cloneIfLooping();
+    this.itemsOnRail();
+    this.addStartEvent();
+    this.addGoToIfLooping();
+    this.updateOnResize();
+    this.goTo(this.config.firstItem + (this.config.looping ? 1 : 0));
   }
 
   // ==== SETUP ====
   bindingMethods() {
-    const methodsToBind = [
+    const toBind = [
       'onStart',
       'onFinal',
+      'goToIfLooping',
       'prevItem',
       'nextItem',
-      'goToIfLooping',
     ];
-    methodsToBind.forEach((method) => {
-      this[method] = this[method].bind(this);
-    });
-
+    toBind.forEach((m) => (this[m] = this[m].bind(this)));
     this.onMoving = throttle(this.onMoving.bind(this), 16);
     this.onResizing = throttle(this.onResizing.bind(this), 200);
   }
@@ -59,14 +48,6 @@ export default class Slider {
     this.wrapper.addEventListener('pointerdown', this.onStart, {
       passive: false,
     });
-
-    const controlEvent = ['click', 'touchstart'];
-    if (this.config.prevControl && this.config.nextControl) {
-      controlEvent.forEach((event) => {
-        this.config.prevControl.addEventListener(event, this.prevItem);
-        this.config.nextControl.addEventListener(event, this.nextItem);
-      });
-    }
   }
 
   addGoToIfLooping() {
@@ -89,6 +70,8 @@ export default class Slider {
     if (!this.config.looping) return;
 
     const elements = [...this.rail.children];
+    if (elements.length < 2) return;
+
     const firstEl = elements[0];
     const lastEl = elements[elements.length - 1];
 
@@ -108,9 +91,10 @@ export default class Slider {
     const arrSize = this.arrItems.length;
     const lastIndex = arrSize - 1;
 
-    if (index < 0 || index > arrSize - 1) console.warn(`Invalid index chosen`);
-
-    if (!this.config.looping) {
+    if (this.config.looping) {
+      if (index < 0) index = 1;
+      if (index > lastIndex) index = lastIndex - 1;
+    } else {
       if (index < 0) index = 0;
       if (index > lastIndex) index = lastIndex;
     }
@@ -132,24 +116,21 @@ export default class Slider {
   }
 
   toggleActive() {
-    const elementList = this.arrItems;
     const activeClass = this.config.activeClass;
-    elementList.forEach((el) => el.item.classList.remove(activeClass));
+    this.arrItems.forEach((el) => el.item.classList.remove(activeClass));
 
     const realIndex = this.getRealIndex(this.index.active);
     const realItem = this.arrItems[realIndex];
-    console.log(realItem);
-
     if (realItem) realItem.item.classList.add(activeClass);
   }
 
   goToIfLooping() {
-    const lastIndex = this.arrItems.length - 1;
-    const activeIndex = this.index.active;
     if (!this.config.looping) {
       this.toggleActive();
       return;
     }
+    const lastIndex = this.arrItems.length - 1;
+    const activeIndex = this.index.active;
 
     if (activeIndex === lastIndex) this.goTo(1, false);
     if (activeIndex === 0) this.goTo(lastIndex - 1, false);
@@ -165,7 +146,7 @@ export default class Slider {
   }
 
   moveSlide(distX, transition = true) {
-    this.rail.style.transform = `translate3d(${distX}px, 0px, 0px)`;
+    this.rail.style.transform = `translate3d(${distX}px, 0, 0)`;
     this.rail.style.transition = transition
       ? 'transform .3s ease-in-out'
       : 'none';
@@ -202,7 +183,7 @@ export default class Slider {
     setTimeout(() => {
       this.itemsOnRail();
       this.goTo(this.index.active);
-    }, 500);
+    }, 200);
   }
 
   // ==== UTILS ====
@@ -211,5 +192,32 @@ export default class Slider {
     if (index === 0) return this.arrItems.length - 3;
     if (index === this.arrItems.length - 1) return 0;
     return index;
+  }
+}
+
+export class SliderCTRL extends Slider {
+  constructor(defaultParams) {
+    super(defaultParams);
+    this.prevControl = defaultParams.config
+      ? document.querySelector(this.config.prevControl)
+      : null;
+    this.nextControl = defaultParams.config
+      ? document.querySelector(this.config.nextControl)
+      : null;
+  }
+
+  addEventToCTRL() {
+    const controlEvent = ['click', 'touchstart'];
+    if (this.prevControl && this.nextControl) {
+      controlEvent.forEach((event) => {
+        this.prevControl.addEventListener(event, this.prevItem);
+        this.nextControl.addEventListener(event, this.nextItem);
+      });
+    }
+  }
+
+  init() {
+    super.init();
+    this.addEventToCTRL();
   }
 }

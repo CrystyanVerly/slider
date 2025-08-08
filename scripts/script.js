@@ -1,9 +1,13 @@
-import Slider from './modules/slider.js';
+import { SliderCTRL } from '../scripts/modules/slider.js';
 
-const banner = new Slider('#slider-wrapper', '#slider-track', {
-  initialItem: 5,
-  looping: true,
-  prevControl: "[data-control='prev']",
-  nextControl: "[data-control='next']",
+const slider = new SliderCTRL({
+  wrapper: '[data-slider="wrapper"]',
+  rail: '[data-slider="rail"]',
+  config: {
+    prevControl: '[data-control="prev"]',
+    nextControl: '[data-control="next"]',
+  },
 });
-banner.init();
+
+slider.init();
+console.log(slider);
