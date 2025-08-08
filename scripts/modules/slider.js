@@ -16,7 +16,6 @@ export default class Slider {
 
     this.distances = { initial: 0, moving: 0, final: 0 };
     this.index = { active: 0 };
-
     this.bindingMethods();
   }
 
@@ -59,11 +58,17 @@ export default class Slider {
   }
 
   itemsOnRail() {
-    this.arrItems = [...this.rail.children].map((item) => {
+    this.items = [...this.rail.children];
+
+    this.itemOnLeft = [...this.rail.children].map((item) => {
       const onLeft = -item.offsetLeft;
       return { item, onLeft };
     });
-    return this.arrItems;
+
+    return {
+      items: this.items,
+      itemOnLeft: this.itemOnLeft,
+    };
   }
 
   cloneIfLooping() {
@@ -88,7 +93,7 @@ export default class Slider {
 
   // ==== ITEM CHANGE ====
   goTo(index, transition = true) {
-    const arrSize = this.arrItems.length;
+    const arrSize = this.items.length;
     const lastIndex = arrSize - 1;
 
     if (this.config.looping) {
@@ -99,7 +104,7 @@ export default class Slider {
       if (index > lastIndex) index = lastIndex;
     }
 
-    const { onLeft } = this.arrItems[index];
+    const { onLeft } = this.itemOnLeft[index];
     this.moveSlide(onLeft, transition);
     this.distances.final = onLeft;
     this.index.active = index;
@@ -117,11 +122,11 @@ export default class Slider {
 
   toggleActive() {
     const activeClass = this.config.activeClass;
-    this.arrItems.forEach((el) => el.item.classList.remove(activeClass));
+    this.items.forEach((el) => el.classList.remove(activeClass));
 
     const realIndex = this.getRealIndex(this.index.active);
-    const realItem = this.arrItems[realIndex];
-    if (realItem) realItem.item.classList.add(activeClass);
+    const realItem = this.items[realIndex];
+    if (realItem) realItem.classList.add(activeClass);
 
     this.accessibility();
   }
@@ -131,7 +136,7 @@ export default class Slider {
       this.toggleActive();
       return;
     }
-    const lastIndex = this.arrItems.length - 1;
+    const lastIndex = this.items.length - 1;
     const activeIndex = this.index.active;
 
     if (activeIndex === lastIndex) this.goTo(1, false);
@@ -191,8 +196,8 @@ export default class Slider {
   // ==== UTILS ====
   getRealIndex(index) {
     if (!this.config.looping) return index;
-    if (index === 0) return this.arrItems.length - 3;
-    if (index === this.arrItems.length - 1) return 0;
+    if (index === 0) return this.items.length - 3;
+    if (index === this.items.length - 1) return 0;
     return index;
   }
 
@@ -203,7 +208,6 @@ export default class Slider {
 
     listItems.forEach((child) => {
       const isActive = child.classList.contains(activeClass);
-
       if (
         !isActive &&
         document.activeElement &&
@@ -224,6 +228,8 @@ export default class Slider {
         child.setAttribute('aria-current', 'true');
       }
     });
+
+    return listItems;
   }
 }
 
@@ -236,12 +242,15 @@ export class SliderCTRL extends Slider {
     this.nextControl = defaultParams.config
       ? document.querySelector(this.config.nextControl)
       : null;
+    this.enableDots = defaultParams.config.enableDots ?? true;
+    this.arrDots = [];
   }
 
   // ==== PUBLIC ====
   init() {
     super.init();
     this.addEventToCTRL();
+    this.createDotCTRL();
   }
 
   // ==== SETUP ====
@@ -253,5 +262,27 @@ export class SliderCTRL extends Slider {
         this.nextControl.addEventListener(event, this.nextItem);
       });
     }
+  }
+
+  // ==== CREATE DOTS ====
+  createDotCTRL() {
+    if (!this.wrapper && !this.config.enableDots) return;
+    const items = this.items;
+    const activeDot = 'active-dot';
+
+    const railDot = document.createElement('ul');
+    railDot.dataset.ctrl = 'dot';
+
+    items.forEach((_, i) => {
+      const dotLi = document.createElement('li');
+      const dotLink = document.createElement('a');
+
+      dotLink.href = `#slide${i}`;
+      dotLi.appendChild(dotLink);
+      railDot.appendChild(dotLi);
+      this.arrDots.push(dotLink);
+    });
+    this.wrapper.appendChild(railDot);
+    console.log(this.arrDots);
   }
 }
