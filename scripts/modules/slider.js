@@ -122,6 +122,8 @@ export default class Slider {
     const realIndex = this.getRealIndex(this.index.active);
     const realItem = this.arrItems[realIndex];
     if (realItem) realItem.item.classList.add(activeClass);
+
+    this.accessibility();
   }
 
   goToIfLooping() {
@@ -193,6 +195,36 @@ export default class Slider {
     if (index === this.arrItems.length - 1) return 0;
     return index;
   }
+
+  // ==== ACCESSIBILITY ====
+  accessibility() {
+    const listItems = [...this.rail.children];
+    const activeClass = this.config.activeClass;
+
+    listItems.forEach((child) => {
+      const isActive = child.classList.contains(activeClass);
+
+      if (
+        !isActive &&
+        document.activeElement &&
+        child.contains(document.activeElement)
+      ) {
+        document.activeElement.blur();
+      }
+
+      if (!isActive) {
+        child.setAttribute('inert', '');
+        child.setAttribute('aria-hidden', 'true');
+        child.setAttribute('tabindex', '-1');
+        child.removeAttribute('aria-current');
+      } else {
+        child.removeAttribute('inert');
+        child.setAttribute('aria-hidden', 'false');
+        child.setAttribute('tabindex', '0');
+        child.setAttribute('aria-current', 'true');
+      }
+    });
+  }
 }
 
 export class SliderCTRL extends Slider {
@@ -206,6 +238,13 @@ export class SliderCTRL extends Slider {
       : null;
   }
 
+  // ==== PUBLIC ====
+  init() {
+    super.init();
+    this.addEventToCTRL();
+  }
+
+  // ==== SETUP ====
   addEventToCTRL() {
     const controlEvent = ['click', 'touchstart'];
     if (this.prevControl && this.nextControl) {
@@ -214,10 +253,5 @@ export class SliderCTRL extends Slider {
         this.nextControl.addEventListener(event, this.nextItem);
       });
     }
-  }
-
-  init() {
-    super.init();
-    this.addEventToCTRL();
   }
 }
