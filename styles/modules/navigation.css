@@ -38,26 +38,28 @@
   gap: 1rem;
 }
 
-[data-ctrl='railDot'] li {
-  position: relative;
-}
-[data-ctrl='railDot'] li a {
-  padding: 0;
+[data-ctrl='railDot'] a {
   display: block;
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
+  background-color: #aaa;
   pointer-events: auto;
-  background-color: #ccc;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-[data-ctrl='railDot'] li a.active-dot {
-  background-color: var(--color-c11);
+[data-ctrl='railDot'] a:hover {
+  transform: scale(1.2);
 }
 
-[data-ctrl='railDot'] li a.disabled {
+[data-ctrl='railDot'] a.active-dot {
+  background-color: #fff;
+}
+
+[data-ctrl='railDot'] a.disabled {
   pointer-events: none !important;
   opacity: 0.5;
   cursor: default;
+  background-color: #ccc;
   user-select: none;
 }

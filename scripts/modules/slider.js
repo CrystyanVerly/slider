@@ -16,6 +16,7 @@ export default class Slider {
 
     this.distances = { initial: 0, moving: 0, final: 0 };
     this.index = { active: 0 };
+    this.changeEvent = new Event('changeEvent');
     this.bindingMethods();
   }
 
@@ -38,6 +39,7 @@ export default class Slider {
       'prevItem',
       'nextItem',
       'linkingDot',
+      'toggleActiveDot',
     ];
     toBind.forEach((m) => (this[m] = this[m].bind(this)));
     this.onMoving = throttle(this.onMoving.bind(this), 16);
@@ -114,6 +116,7 @@ export default class Slider {
     this.moveSlide(onLeft, transition);
     this.distances.final = onLeft;
     this.index.active = index;
+    this.wrapper.dispatchEvent(this.changeEvent);
   }
 
   prevItem(e) {
@@ -253,6 +256,9 @@ export class SliderCTRL extends Slider {
     this.nextControl = defaultParams.config
       ? document.querySelector(this.config.nextControl)
       : null;
+    this.customCTRL = defaultParams.config
+      ? document.querySelector(this.config.customCTRL)
+      : null;
     this.enableDots = defaultParams.config.enableDots ?? true;
     this.arrDots = [];
   }
@@ -261,6 +267,7 @@ export class SliderCTRL extends Slider {
   init() {
     super.init();
     this.addEventToCTRL();
+    this.toggleActiveDot();
   }
 
   // ==== SETUP ====
@@ -279,6 +286,7 @@ export class SliderCTRL extends Slider {
           dot.addEventListener(evt, this.linkingDot);
         }),
       );
+      this.wrapper.addEventListener('changeEvent', this.toggleActiveDot);
     }
   }
 
@@ -288,7 +296,7 @@ export class SliderCTRL extends Slider {
     const items = this.items;
     this.classActiveDot = 'active-dot';
 
-    const railDot = document.createElement('ul');
+    const railDot = this.customCTRL || document.createElement('ul');
     railDot.dataset.ctrl = 'railDot';
 
     items.forEach((item, i) => {
@@ -296,6 +304,7 @@ export class SliderCTRL extends Slider {
       const dotLink = document.createElement('a');
       if (!item.classList.contains(this.classClone)) {
         dotLink.href = `#slide${i}`;
+        dotLink.dataset.index = i;
         dotLi.appendChild(dotLink);
         railDot.appendChild(dotLi);
       }
@@ -304,15 +313,21 @@ export class SliderCTRL extends Slider {
     this.wrapper.appendChild(railDot);
   }
 
-  activeDot() {
-    this.arrDots.forEach((dot) => dot.classList.remove(active));
-    if (this.index.active === index) {
-      // console.log(this.arrDots.classList.add(this.activeDot));
-    }
+  toggleActiveDot() {
+    if (!this.arrDots) return;
+    this.arrDots.forEach((dot) => dot.classList.remove(this.classActiveDot));
+
+    const realIndex = this.getRealIndex(this.index.active);
+    const dot = this.arrDots[realIndex];
+
+    if (dot) dot.classList.add(this.classActiveDot);
   }
 
   linkingDot(e) {
     e.preventDefault();
-    console.log(e);
+    const dotIndex = +e.currentTarget.dataset.index;
+    const linkedItem = dotIndex + (this.config.looping ? 1 : 0);
+    this.goTo(linkedItem);
+    this.toggleActiveDot();
   }
 }

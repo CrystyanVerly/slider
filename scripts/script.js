@@ -10,3 +10,4 @@ const slider = new SliderCTRL({
 });
 
 slider.init();
+console.log(slider);
