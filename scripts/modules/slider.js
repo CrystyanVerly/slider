@@ -37,6 +37,7 @@ export default class Slider {
       'goToIfLooping',
       'prevItem',
       'nextItem',
+      'linkingDot',
     ];
     toBind.forEach((m) => (this[m] = this[m].bind(this)));
     this.onMoving = throttle(this.onMoving.bind(this), 16);
@@ -58,23 +59,28 @@ export default class Slider {
   }
 
   itemsOnRail() {
-    this.items = [...this.rail.children];
+    this.itemsWithClones = [...this.rail.children];
 
-    this.itemOnLeft = [...this.rail.children].map((item) => {
+    this.items = this.itemsWithClones.filter(
+      (el) => !el.classList.contains(this.classClone),
+    );
+
+    this.itemsPosition = this.itemsWithClones.map((item) => {
       const onLeft = -item.offsetLeft;
       return { item, onLeft };
     });
 
     return {
       items: this.items,
-      itemOnLeft: this.itemOnLeft,
+      itemsWithClones: this.itemsWithClones,
+      itemsPosition: this.itemsPosition,
     };
   }
 
   cloneIfLooping() {
     if (!this.config.looping) return;
-
     const elements = [...this.rail.children];
+
     if (elements.length < 2) return;
 
     const firstEl = elements[0];
@@ -82,10 +88,10 @@ export default class Slider {
 
     const firstElClone = firstEl.cloneNode(true);
     const lastElClone = lastEl.cloneNode(true);
-    const classClone = 'clonedItem';
+    this.classClone = 'clonedItem';
 
-    firstElClone.classList.add(classClone);
-    lastElClone.classList.add(classClone);
+    firstElClone.classList.add(this.classClone);
+    lastElClone.classList.add(this.classClone);
 
     this.rail.insertBefore(lastElClone, firstEl);
     this.rail.appendChild(firstElClone);
@@ -93,7 +99,7 @@ export default class Slider {
 
   // ==== ITEM CHANGE ====
   goTo(index, transition = true) {
-    const arrSize = this.items.length;
+    const arrSize = this.itemsWithClones.length;
     const lastIndex = arrSize - 1;
 
     if (this.config.looping) {
@@ -104,7 +110,7 @@ export default class Slider {
       if (index > lastIndex) index = lastIndex;
     }
 
-    const { onLeft } = this.itemOnLeft[index];
+    const { onLeft } = this.itemsPosition[index];
     this.moveSlide(onLeft, transition);
     this.distances.final = onLeft;
     this.index.active = index;
@@ -122,6 +128,7 @@ export default class Slider {
 
   toggleActive() {
     const activeClass = this.config.activeClass;
+
     this.items.forEach((el) => el.classList.remove(activeClass));
 
     const realIndex = this.getRealIndex(this.index.active);
@@ -136,11 +143,12 @@ export default class Slider {
       this.toggleActive();
       return;
     }
-    const lastIndex = this.items.length - 1;
+
+    const lastIndex = this.itemsWithClones.length - 1;
     const activeIndex = this.index.active;
 
     if (activeIndex === lastIndex) this.goTo(1, false);
-    if (activeIndex === 0) this.goTo(lastIndex - 1, false);
+    else if (activeIndex === 0) this.goTo(lastIndex - 1, false);
 
     this.toggleActive();
   }
@@ -196,14 +204,18 @@ export default class Slider {
   // ==== UTILS ====
   getRealIndex(index) {
     if (!this.config.looping) return index;
-    if (index === 0) return this.items.length - 3;
-    if (index === this.items.length - 1) return 0;
-    return index;
+
+    const totalOriginals = this.items.length;
+    const totalWithClones = this.itemsWithClones.length;
+
+    if (index === 0) return totalOriginals - 1;
+    if (index === totalWithClones - 1) return 0;
+    return index - 1;
   }
 
   // ==== ACCESSIBILITY ====
   accessibility() {
-    const listItems = [...this.rail.children];
+    const listItems = this.itemsWithClones;
     const activeClass = this.config.activeClass;
 
     listItems.forEach((child) => {
@@ -212,9 +224,8 @@ export default class Slider {
         !isActive &&
         document.activeElement &&
         child.contains(document.activeElement)
-      ) {
+      )
         document.activeElement.blur();
-      }
 
       if (!isActive) {
         child.setAttribute('inert', '');
@@ -250,17 +261,24 @@ export class SliderCTRL extends Slider {
   init() {
     super.init();
     this.addEventToCTRL();
-    this.createDotCTRL();
   }
 
   // ==== SETUP ====
   addEventToCTRL() {
-    const controlEvent = ['click', 'touchstart'];
-    if (this.prevControl && this.nextControl) {
-      controlEvent.forEach((event) => {
-        this.prevControl.addEventListener(event, this.prevItem);
-        this.nextControl.addEventListener(event, this.nextItem);
-      });
+    const userEvent = ['click', 'touchstart'];
+    userEvent.forEach((evt) => {
+      if (this.prevControl && this.nextControl) {
+        this.prevControl.addEventListener(evt, this.prevItem);
+        this.nextControl.addEventListener(evt, this.nextItem);
+      }
+    });
+    if (this.enableDots) {
+      this.createDotCTRL();
+      this.arrDots.forEach((dot) =>
+        userEvent.forEach((evt) => {
+          dot.addEventListener(evt, this.linkingDot);
+        }),
+      );
     }
   }
 
@@ -268,21 +286,33 @@ export class SliderCTRL extends Slider {
   createDotCTRL() {
     if (!this.wrapper && !this.config.enableDots) return;
     const items = this.items;
-    const activeDot = 'active-dot';
+    this.classActiveDot = 'active-dot';
 
     const railDot = document.createElement('ul');
-    railDot.dataset.ctrl = 'dot';
+    railDot.dataset.ctrl = 'railDot';
 
-    items.forEach((_, i) => {
+    items.forEach((item, i) => {
       const dotLi = document.createElement('li');
       const dotLink = document.createElement('a');
-
-      dotLink.href = `#slide${i}`;
-      dotLi.appendChild(dotLink);
-      railDot.appendChild(dotLi);
+      if (!item.classList.contains(this.classClone)) {
+        dotLink.href = `#slide${i}`;
+        dotLi.appendChild(dotLink);
+        railDot.appendChild(dotLi);
+      }
       this.arrDots.push(dotLink);
     });
     this.wrapper.appendChild(railDot);
-    console.log(this.arrDots);
+  }
+
+  activeDot() {
+    this.arrDots.forEach((dot) => dot.classList.remove(active));
+    if (this.index.active === index) {
+      // console.log(this.arrDots.classList.add(this.activeDot));
+    }
+  }
+
+  linkingDot(e) {
+    e.preventDefault();
+    console.log(e);
   }
 }
