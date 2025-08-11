@@ -10,6 +10,7 @@ export default class Slider {
     this.config = {
       firstItem: 0,
       looping: true,
+      autoPlay: { play: true, interval: 4000, pause: false },
       activeClass: 'active',
       ...config,
     };
@@ -163,10 +164,10 @@ export default class Slider {
     return this.distances.final + calcDist;
   }
 
-  moveSlide(distX, transition = true) {
+  moveSlide(distX, transition = true, transTime = 300) {
     this.rail.style.transform = `translate3d(${distX}px, 0, 0)`;
     this.rail.style.transition = transition
-      ? 'transform .3s ease-in-out'
+      ? `transform .${transTime}s ease`
       : 'none';
   }
 
@@ -175,6 +176,30 @@ export default class Slider {
     if (this.distances.moving < -minMove) this.nextItem();
     else if (this.distances.moving > minMove) this.prevItem();
     else this.goTo(this.index.active);
+  }
+
+  autoPLay() {
+    if (!this.config.autoPlay.play) return;
+    const interval = this.config.autoPlay.interval;
+    this.intervalID = null;
+    if (this.intervalID) clearInterval(this.intervalID);
+    this.intervalID = setInterval(() => {
+      this.nextItem();
+    }, interval);
+  }
+
+  pauseAutoPlay() {
+    const pauseAutoPlay = this.config.autoPlay.pause;
+    const interval = this.config.autoPlay.interval;
+
+    this.resumeTimeout = null;
+    if (this.intervalID) {
+      clearInterval(this.intervalID);
+      this.intervalID = null;
+    }
+    if (this.resumeTimeout) clearInterval(this.resumeTimeout);
+
+    this.resumeTimeout = setTimeout(() => this.autoPLay(), interval);
   }
 
   // ==== EVENTS (DRAG) ====
@@ -218,10 +243,9 @@ export default class Slider {
 
   // ==== ACCESSIBILITY ====
   accessibility() {
-    const listItems = this.itemsWithClones;
     const activeClass = this.config.activeClass;
 
-    listItems.forEach((child) => {
+    this.itemsWithClones.forEach((child) => {
       const isActive = child.classList.contains(activeClass);
       if (
         !isActive &&
@@ -230,20 +254,13 @@ export default class Slider {
       )
         document.activeElement.blur();
 
-      if (!isActive) {
-        child.setAttribute('inert', '');
-        child.setAttribute('aria-hidden', 'true');
-        child.setAttribute('tabindex', '-1');
-        child.removeAttribute('aria-current');
-      } else {
-        child.removeAttribute('inert');
-        child.setAttribute('aria-hidden', 'false');
-        child.setAttribute('tabindex', '0');
-        child.setAttribute('aria-current', 'true');
-      }
-    });
+      child.toggleAttribute('inert', !isActive);
+      child.setAttribute('aria-hidden', String(!isActive));
+      child.setAttribute('tabindex', isActive ? '0' : '-1');
 
-    return listItems;
+      if (isActive) child.setAttribute('aria-current', 'true');
+      else child.removeAttribute('aria-current');
+    });
   }
 }
 
