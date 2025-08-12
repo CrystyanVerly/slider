@@ -273,8 +273,8 @@ export class SliderCTRL extends Slider {
     this.nextControl = defaultParams.config
       ? document.querySelector(this.config.nextControl)
       : null;
-    this.customCTRL = defaultParams.config
-      ? document.querySelector(this.config.customCTRL)
+    this.customControl = defaultParams.config
+      ? document.querySelector(this.config.customControl)
       : null;
     this.enableDots = defaultParams.config.enableDots ?? true;
     this.arrDots = [];
@@ -283,12 +283,14 @@ export class SliderCTRL extends Slider {
   // ==== PUBLIC ====
   init() {
     super.init();
-    this.addEventToCTRL();
+    this.addEventToControls();
     this.toggleActiveDot();
   }
 
   // ==== SETUP ====
-  addEventToCTRL() {
+  addEventToControls() {
+    this.createDotCTRL();
+
     const userEvent = ['click', 'touchstart'];
     userEvent.forEach((evt) => {
       if (this.prevControl && this.nextControl) {
@@ -297,7 +299,6 @@ export class SliderCTRL extends Slider {
       }
     });
     if (this.enableDots) {
-      this.createDotCTRL();
       this.arrDots.forEach((dot) =>
         userEvent.forEach((evt) => {
           dot.addEventListener(evt, this.linkingDot);
@@ -313,8 +314,8 @@ export class SliderCTRL extends Slider {
     const items = this.items;
     this.classActiveDot = 'active-dot';
 
-    const railDot = this.customCTRL || document.createElement('ul');
-    railDot.dataset.ctrl = 'railDot';
+    const railDot = document.createElement('ul');
+    railDot.dataset.ctrl = 'rail-dot';
 
     items.forEach((item, i) => {
       const dotLi = document.createElement('li');
@@ -329,6 +330,12 @@ export class SliderCTRL extends Slider {
     });
     this.wrapper.appendChild(railDot);
   }
+
+  // addControl() {
+  //   this.control = this.customControl || this.createDotCTRL();
+  //   this.controls = [...this.control.children];
+  //   this.controls.forEach(this.control);
+  // }
 
   toggleActiveDot() {
     if (!this.arrDots) return;

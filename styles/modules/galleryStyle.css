@@ -1,0 +1,94 @@
+/* 
+id on wrapper: slider-gallery-wrapper
+id on rail: slider-gallery-rail 
+id on arrow-wrapper: arrow-gallery-wrapper
+*/
+
+#slider-gallery-wrapper {
+  position: relative;
+  overflow: hidden;
+  height: 80vh;
+  width: 50vw;
+  margin: auto;
+  touch-action: pan-y;
+}
+
+#slider-gallery-rail {
+  position: relative;
+  display: flex;
+  height: 100%;
+  width: 100%;
+  will-change: transform;
+}
+
+#slider-gallery-rail li {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+#slider-gallery-rail li img {
+  width: 100%;
+}
+
+/* navigation */
+
+#arrow-gallery-wrapper {
+  position: absolute;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#arrow-gallery-wrapper button {
+  background: transparent;
+  color: #aaa;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: color 0.5s ease;
+}
+
+#arrow-gallery-wrapper button:hover {
+  color: #fff;
+}
+
+#arrow-gallery-wrapper svg {
+  width: 6rem;
+  height: 6rem;
+  transition: color 0.3s ease;
+}
+
+/* custom control */
+
+/* Container das miniaturas */
+#custom-control {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  /* gap: 0.5rem; */
+  scrollbar-width: none;
+  justify-content: center;
+}
+
+#custom-control::-webkit-scrollbar {
+  display: none;
+}
+
+#custom-control li {
+  flex: 0 0 auto;
+  width: 70px;
+  height: 70px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.3s ease-in-out;
+}
+#custom-control li:hover {
+  opacity: 1;
+}

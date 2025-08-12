@@ -4,14 +4,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="this is a class to build a banner, gallery or like-stories mode">
   <link rel="stylesheet" href="./styles/styles.css">
   <title>Slider</title>
 </head>
 
 <body>
   <section>
-    <div id="slider-wrapper" data-slider="wrapper">
-      <ul id="slider-track" data-slider="rail">
+    <div id="slider-gallery-wrapper" data-slider="wrapper">
+      <ul id="slider-gallery-rail" data-slider="rail">
         <li><img src="./assets/img/deer.webp" alt="deer" width="1920" height="1282"></li>
         <li><img src="./assets/img/duck.webp" alt="duck" width="1920" height="1280"></li>
         <li><img src="./assets/img/flamingo.webp" alt="flamingo" width="1920" height="1280"></li>
@@ -21,7 +22,7 @@
         <li><img src="./assets/img/rabbit.webp" alt="rabbit" width="1920" height="1280"></li>
         <li><img src="./assets/img/squirrel.webp" alt="squirrel" width="1920" height="1280"></li>
       </ul>
-      <div id="arrow-wrapper">
+      <div id="arrow-gallery-wrapper">
         <button class="arrow-left" data-control="prev" aria-label="previous item">
           <svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 256 256">
             <path fill="currentColor" d="M162.83 205.17a4 4 0 0 1-5.66 5.66l-80-80a4 4 0 0 1 0-5.66l80-80a4 4 0 1 1 5.66 5.66L85.66 128Z" />
@@ -33,6 +34,16 @@
           </svg>
         </button>
       </div>
+      <!-- <ul id="custom-control" data-control="custom">
+        <li><img src="./assets/thumb/deer-thumb.webp" alt="deer" width="400" height="400"></li>
+        <li><img src="./assets/thumb/duck-thumb.webp" alt="duck" width="400" height="400"></li>
+        <li><img src="./assets/thumb/flamingo-thumb.webp" alt="flamingo" width="400" height="400"></li>
+        <li><img src="./assets/thumb/human-thumb.webp" alt="human" width="400" height="400"></li>
+        <li><img src="./assets/thumb/lion-thumb.webp" alt="lion" width="400" height="400"></li>
+        <li><img src="./assets/thumb/macaw-thumb.webp" alt="macaw" width="400" height="400"></li>
+        <li><img src="./assets/thumb/rabbit-thumb.webp" alt="rabbit" width="400" height="400"></li>
+        <li><img src="./assets/thumb/squirrel-thumb.webp" alt="squirrel" width="400" height="400"></li>
+      </ul> -->
     </div>
   </section>
   <script type="module" src="./scripts/script.js"></script>
