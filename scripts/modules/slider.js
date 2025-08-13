@@ -63,16 +63,13 @@ export default class Slider {
 
   itemsOnRail() {
     this.itemsWithClones = [...this.rail.children];
-
     this.items = this.itemsWithClones.filter(
       (el) => !el.classList.contains(this.classClone),
     );
-
     this.itemsPosition = this.itemsWithClones.map((item) => {
       const onLeft = -item.offsetLeft;
       return { item, onLeft };
     });
-
     return {
       items: this.items,
       itemsWithClones: this.itemsWithClones,
@@ -241,7 +238,6 @@ export default class Slider {
     return index - 1;
   }
 
-  // ==== ACCESSIBILITY ====
   accessibility() {
     const activeClass = this.config.activeClass;
 
@@ -299,6 +295,7 @@ export class SliderCTRL extends Slider {
     this.toggleActiveControls(this.controls);
   }
 
+  // ==== SETUP ====
   addEventsArrow() {
     if (!this.prevControl && !this.nextControl) return;
     this.userEvents.forEach((evt) => {
@@ -321,11 +318,11 @@ export class SliderCTRL extends Slider {
     );
   }
 
+  // ==== CONTROLS ====
   createCustomControl() {
     if (!this.customControl) return;
 
     const userControl = [...this.customControl.children];
-
     if (userControl.length) {
       userControl.forEach((ctrl, i) => {
         ctrl.dataset.index = i;
@@ -334,7 +331,6 @@ export class SliderCTRL extends Slider {
         if (img) img.setAttribute('alt', img.alt || `Item ${i + 1}`);
       });
     }
-
     return userControl;
   }
 
@@ -369,6 +365,7 @@ export class SliderCTRL extends Slider {
     this.addEventsControls(this.controls);
   }
 
+  // ==== ITEM CHANGE ====
   toggleActiveControls(arrControls) {
     if (!arrControls?.length) return;
     arrControls.forEach((dot) => dot.classList.remove(this.classActiveDot));
