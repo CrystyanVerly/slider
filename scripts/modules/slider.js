@@ -39,8 +39,8 @@ export default class Slider {
       'goToIfLooping',
       'prevItem',
       'nextItem',
-      'linkingDot',
-      'toggleActiveDot',
+      'linkingControls',
+      'toggleActiveControls',
     ];
     toBind.forEach((m) => (this[m] = this[m].bind(this)));
     this.onMoving = throttle(this.onMoving.bind(this), 16);
@@ -276,18 +276,19 @@ export class SliderCTRL extends Slider {
     this.customControl = defaultParams.config
       ? document.querySelector(defaultParams.config.customControl)
       : null;
-    this.enableDots = defaultParams.config
-      ? defaultParams.config.enableDots
+    this.enableControls = defaultParams.config.enableControls
+      ? defaultParams.config.enableControls
       : true;
+    this.classActiveDot =
+      defaultParams.config?.activeControlClass || 'active-dot';
     this.userEvents = ['click', 'touchstart'];
-    this.arrDots = [];
   }
 
   // ==== PUBLIC ====
   init() {
     super.init();
     this.addControls();
-    this.toggleActiveDot();
+    this.toggleActiveControls(this.controls);
   }
 
   addEventsArrow() {
@@ -298,59 +299,79 @@ export class SliderCTRL extends Slider {
     });
   }
 
-  addEventsDot() {
-    if (!this.wrapper && !this.config.enableDots) return;
+  addEventsControls(arrControls) {
+    if (!this.wrapper && !this.enableControls) return;
 
-    this.createDotControl();
-    this.arrDots.forEach((dot) =>
+    arrControls.forEach((c) =>
       this.userEvents.forEach((evt) => {
-        dot.addEventListener(evt, this.linkingDot);
+        c.addEventListener(evt, this.linkingControls);
       }),
     );
-    this.wrapper.addEventListener('changeEvent', this.toggleActiveDot);
+
+    this.wrapper.addEventListener('changeEvent', () => {
+      this.toggleActiveControls(arrControls);
+    });
+  }
+
+  createCustomControl() {
+    if (!this.customControl) return;
+
+    const userControl = [...this.customControl.children];
+
+    if (userControl.length) {
+      userControl.forEach((ctrl, i) => {
+        ctrl.dataset.index = i;
+        ctrl.setAttribute('aria-label', `item ${i + 1}`);
+        const img = ctrl.querySelector('img');
+        if (img) img.setAttribute('alt', img.alt || `Item ${i + 1}`);
+      });
+    }
+
+    return userControl;
   }
 
   createDotControl() {
     const items = this.items;
     const railDot = document.createElement('ul');
-    railDot.dataset.ctrl = 'rail-dot';
-    this.classActiveDot = 'active-dot';
+    railDot.dataset.control = 'default';
 
     const fragment = document.createDocumentFragment();
     items.forEach((_, i) => {
       const dotLi = document.createElement('li');
+      dotLi.dataset.index = i;
 
       const dotLink = document.createElement('a');
       dotLink.href = `#slide${i}`;
-      dotLink.dataset.index = i;
       dotLink.setAttribute('aria-label', `go to item ${i + 1}`);
 
       dotLi.appendChild(dotLink);
       fragment.appendChild(dotLi);
-      this.arrDots.push(dotLink);
     });
     railDot.appendChild(fragment);
     this.wrapper.appendChild(railDot);
+
+    return [...railDot.children];
   }
 
   addControls() {
     this.addEventsArrow();
-    this.addEventsDot();
+    if (!this.enableControls) return;
+    this.controls = this.createCustomControl() || this.createDotControl();
+    this.addEventsControls(this.controls);
   }
 
-  toggleActiveDot() {
-    if (!this.arrDots) return;
-    this.arrDots.forEach((dot) => dot.classList.remove(this.classActiveDot));
+  toggleActiveControls(arrControls) {
+    if (!arrControls?.length) return;
+    arrControls.forEach((dot) => dot.classList.remove(this.classActiveDot));
     const realIndex = this.getRealIndex(this.index.active);
-    const dot = this.arrDots[realIndex];
+    const dot = arrControls[realIndex];
     if (dot) dot.classList.add(this.classActiveDot);
   }
 
-  linkingDot(e) {
+  linkingControls(e) {
     e.preventDefault();
     const dotIndex = +e.currentTarget.dataset.index;
     const linkedItem = dotIndex + (this.config.looping ? 1 : 0);
     this.goTo(linkedItem);
-    this.toggleActiveDot();
   }
 }

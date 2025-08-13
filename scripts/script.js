@@ -6,6 +6,7 @@ const slider = new SliderCTRL({
   config: {
     prevControl: '[data-control="prev"]',
     nextControl: '[data-control="next"]',
+    customControl: '[data-control="custom"]',
   },
 });
 
