@@ -277,73 +277,33 @@ export class SliderCTRL extends Slider {
       ? document.querySelector(this.config.customControl)
       : null;
     this.enableDots = defaultParams.config.enableDots ?? true;
+    this.userEvents = ['click', 'touchstart'];
     this.arrDots = [];
   }
 
   // ==== PUBLIC ====
   init() {
     super.init();
-    this.addEventToControls();
+    this.addControls();
     this.toggleActiveDot();
   }
 
-  // ==== SETUP ====
-  addEventToControls() {
-    this.createDotCTRL();
-
-    const userEvent = ['click', 'touchstart'];
-    userEvent.forEach((evt) => {
-      if (this.prevControl && this.nextControl) {
-        this.prevControl.addEventListener(evt, this.prevItem);
-        this.nextControl.addEventListener(evt, this.nextItem);
-      }
+  addEventsArrow() {
+    this.userEvents.forEach((evt) => {
+      this.prevControl.addEventListener(evt, this.prevItem);
+      this.nextControl.addEventListener(evt, this.nextItem);
     });
-    if (this.enableDots) {
-      this.arrDots.forEach((dot) =>
-        userEvent.forEach((evt) => {
-          dot.addEventListener(evt, this.linkingDot);
-        }),
-      );
-      this.wrapper.addEventListener('changeEvent', this.toggleActiveDot);
-    }
   }
 
-  // ==== CREATE DOTS ====
-  createDotCTRL() {
-    if (!this.wrapper && !this.config.enableDots) return;
-    const items = this.items;
-    this.classActiveDot = 'active-dot';
-
-    const railDot = document.createElement('ul');
-    railDot.dataset.ctrl = 'rail-dot';
-
-    items.forEach((item, i) => {
-      const dotLi = document.createElement('li');
-      const dotLink = document.createElement('a');
-      if (!item.classList.contains(this.classClone)) {
-        dotLink.href = `#slide${i}`;
-        dotLink.dataset.index = i;
-        dotLi.appendChild(dotLink);
-        railDot.appendChild(dotLi);
-      }
-      this.arrDots.push(dotLink);
-    });
-    this.wrapper.appendChild(railDot);
+  addControls() {
+    if (this.prevControl && this.nextControl) this.addEventsArrow();
   }
-
-  // addControl() {
-  //   this.control = this.customControl || this.createDotCTRL();
-  //   this.controls = [...this.control.children];
-  //   this.controls.forEach(this.control);
-  // }
 
   toggleActiveDot() {
     if (!this.arrDots) return;
     this.arrDots.forEach((dot) => dot.classList.remove(this.classActiveDot));
-
     const realIndex = this.getRealIndex(this.index.active);
     const dot = this.arrDots[realIndex];
-
     if (dot) dot.classList.add(this.classActiveDot);
   }
 

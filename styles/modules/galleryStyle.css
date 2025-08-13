@@ -56,14 +56,50 @@ id on arrow-wrapper: arrow-gallery-wrapper
 }
 
 #arrow-gallery-wrapper svg {
-  width: 6rem;
-  height: 6rem;
+  width: 4rem;
+  height: 4rem;
   transition: color 0.3s ease;
+}
+
+[data-ctrl='rail-dot'] {
+  position: absolute;
+  z-index: 9;
+  display: flex;
+  justify-self: center;
+  bottom: 3rem;
+  gap: 0.8rem;
+}
+
+[data-ctrl='rail-dot'] a {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background-color: #aaa;
+  pointer-events: auto;
+  transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transform: scale(0.8);
+}
+
+[data-ctrl='rail-dot'] a:hover {
+  transform: scale(1.1);
+  background-color: #fff;
+}
+
+[data-ctrl='rail-dot'] a.active-dot {
+  background-color: #fff;
+  transform: scale(1.1);
+}
+
+[data-ctrl='rail-dot'] a.disabled {
+  pointer-events: none !important;
+  opacity: 0.5;
+  cursor: default;
+  background-color: #ccc;
+  user-select: none;
 }
 
 /* custom control */
 
-/* Container das miniaturas */
 #custom-control {
   display: flex;
   overflow-x: auto;
