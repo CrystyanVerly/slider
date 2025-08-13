@@ -55,8 +55,8 @@ id on arrow-wrapper: arrow-banner-wrapper
 }
 
 #arrow-banner-wrapper svg {
-  width: 6rem;
-  height: 6rem;
+  width: 5rem;
+  height: 5rem;
   transition: color 0.3s ease;
 }
 

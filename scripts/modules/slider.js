@@ -267,20 +267,28 @@ export default class Slider {
 export class SliderCTRL extends Slider {
   constructor(defaultParams) {
     super(defaultParams);
-    this.prevControl = defaultParams.config
-      ? document.querySelector(defaultParams.config.prevControl)
+
+    const userCfg =
+      defaultParams && defaultParams.config ? defaultParams.config : {};
+
+    const cfg = (this.config = {
+      ...this.config,
+      enableControls: true,
+      activeControlClass: 'active-dot',
+      ...userCfg,
+    });
+
+    this.prevControl = cfg.prevControl
+      ? document.querySelector(cfg.prevControl)
       : null;
-    this.nextControl = defaultParams.config
-      ? document.querySelector(defaultParams.config.nextControl)
+    this.nextControl = cfg.nextControl
+      ? document.querySelector(cfg.nextControl)
       : null;
-    this.customControl = defaultParams.config
-      ? document.querySelector(defaultParams.config.customControl)
+    this.customControl = cfg.customControl
+      ? document.querySelector(cfg.customControl)
       : null;
-    this.enableControls = defaultParams.config.enableControls
-      ? defaultParams.config.enableControls
-      : true;
-    this.classActiveDot =
-      defaultParams.config?.activeControlClass || 'active-dot';
+
+    this.classActiveDot = cfg.activeControlClass;
     this.userEvents = ['click', 'touchstart'];
   }
 
@@ -303,14 +311,14 @@ export class SliderCTRL extends Slider {
     if (!this.wrapper && !this.enableControls) return;
 
     arrControls.forEach((c) =>
-      this.userEvents.forEach((evt) => {
-        c.addEventListener(evt, this.linkingControls);
-      }),
+      this.userEvents.forEach((evt) =>
+        c.addEventListener(evt, this.linkingControls),
+      ),
     );
 
-    this.wrapper.addEventListener('changeEvent', () => {
-      this.toggleActiveControls(arrControls);
-    });
+    this.wrapper.addEventListener('changeEvent', () =>
+      this.toggleActiveControls(arrControls),
+    );
   }
 
   createCustomControl() {
@@ -355,7 +363,8 @@ export class SliderCTRL extends Slider {
 
   addControls() {
     this.addEventsArrow();
-    if (!this.enableControls) return;
+
+    if (!this.config.enableControls) return;
     this.controls = this.createCustomControl() || this.createDotControl();
     this.addEventsControls(this.controls);
   }
