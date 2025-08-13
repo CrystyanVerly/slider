@@ -268,15 +268,17 @@ export class SliderCTRL extends Slider {
   constructor(defaultParams) {
     super(defaultParams);
     this.prevControl = defaultParams.config
-      ? document.querySelector(this.config.prevControl)
+      ? document.querySelector(defaultParams.config.prevControl)
       : null;
     this.nextControl = defaultParams.config
-      ? document.querySelector(this.config.nextControl)
+      ? document.querySelector(defaultParams.config.nextControl)
       : null;
     this.customControl = defaultParams.config
-      ? document.querySelector(this.config.customControl)
+      ? document.querySelector(defaultParams.config.customControl)
       : null;
-    this.enableDots = defaultParams.config.enableDots ?? true;
+    this.enableDots = defaultParams.config
+      ? defaultParams.config.enableDots
+      : true;
     this.userEvents = ['click', 'touchstart'];
     this.arrDots = [];
   }
@@ -289,14 +291,51 @@ export class SliderCTRL extends Slider {
   }
 
   addEventsArrow() {
+    if (!this.prevControl && !this.nextControl) return;
     this.userEvents.forEach((evt) => {
       this.prevControl.addEventListener(evt, this.prevItem);
       this.nextControl.addEventListener(evt, this.nextItem);
     });
   }
 
+  addEventsDot() {
+    if (!this.wrapper && !this.config.enableDots) return;
+
+    this.createDotControl();
+    this.arrDots.forEach((dot) =>
+      this.userEvents.forEach((evt) => {
+        dot.addEventListener(evt, this.linkingDot);
+      }),
+    );
+    this.wrapper.addEventListener('changeEvent', this.toggleActiveDot);
+  }
+
+  createDotControl() {
+    const items = this.items;
+    const railDot = document.createElement('ul');
+    railDot.dataset.ctrl = 'rail-dot';
+    this.classActiveDot = 'active-dot';
+
+    const fragment = document.createDocumentFragment();
+    items.forEach((_, i) => {
+      const dotLi = document.createElement('li');
+
+      const dotLink = document.createElement('a');
+      dotLink.href = `#slide${i}`;
+      dotLink.dataset.index = i;
+      dotLink.setAttribute('aria-label', `go to item ${i + 1}`);
+
+      dotLi.appendChild(dotLink);
+      fragment.appendChild(dotLi);
+      this.arrDots.push(dotLink);
+    });
+    railDot.appendChild(fragment);
+    this.wrapper.appendChild(railDot);
+  }
+
   addControls() {
-    if (this.prevControl && this.nextControl) this.addEventsArrow();
+    this.addEventsArrow();
+    this.addEventsDot();
   }
 
   toggleActiveDot() {
