@@ -10,7 +10,12 @@ export default class Slider {
     this.config = {
       firstItem: 0,
       looping: true,
-      autoPlay: { play: true, interval: 4000, pause: false },
+      autoPlay: {
+        play: true,
+        interval: 4000,
+        pause: false,
+        pauseOnHover: false,
+      },
       activeClass: 'active',
       ...config,
     };
@@ -18,6 +23,10 @@ export default class Slider {
     this.distances = { initial: 0, moving: 0, final: 0 };
     this.index = { active: 0 };
     this.changeEvent = new Event('changeEvent');
+
+    this.intervalID = null;
+    this.resumeTimeout = null;
+
     this.bindingMethods();
   }
 
@@ -29,6 +38,7 @@ export default class Slider {
     this.addGoToIfLooping();
     this.updateOnResize();
     this.goTo(this.config.firstItem + (this.config.looping ? 1 : 0));
+    this.autoPLay();
   }
 
   // ==== SETUP ====
@@ -51,6 +61,15 @@ export default class Slider {
     this.wrapper.addEventListener('pointerdown', this.onStart, {
       passive: false,
     });
+
+    if (this.config.autoPlay.pauseOnHover) {
+      this.wrapper.addEventListener('mouseenter', () =>
+        this.pauseAutoPlay(true),
+      );
+      this.wrapper.addEventListener('mouseleave', () =>
+        this.pauseAutoPlay(false),
+      );
+    }
   }
 
   addGoToIfLooping() {
@@ -176,27 +195,32 @@ export default class Slider {
   }
 
   autoPLay() {
-    if (!this.config.autoPlay.play) return;
+    if (this.config.autoPlay.pause) return;
     const interval = this.config.autoPlay.interval;
-    this.intervalID = null;
     if (this.intervalID) clearInterval(this.intervalID);
     this.intervalID = setInterval(() => {
-      this.nextItem();
+      if (!this.config.looping && this.index.active >= this.items.length - 1)
+        this.goTo(0);
+      else this.nextItem();
     }, interval);
   }
 
-  pauseAutoPlay() {
-    const pauseAutoPlay = this.config.autoPlay.pause;
-    const interval = this.config.autoPlay.interval;
+  pauseAutoPlay(isPaused = true) {
+    this.config.autoPlay.pause = isPaused;
 
-    this.resumeTimeout = null;
-    if (this.intervalID) {
-      clearInterval(this.intervalID);
-      this.intervalID = null;
+    if (isPaused) {
+      if (this.intervalID) {
+        clearInterval(this.intervalID);
+        this.intervalID = null;
+      }
+      if (this.resumeTimeout) {
+        clearInterval(this.resumeTimeout);
+        this.resumeTimeout = null;
+      }
+      return;
     }
-    if (this.resumeTimeout) clearInterval(this.resumeTimeout);
 
-    this.resumeTimeout = setTimeout(() => this.autoPLay(), interval);
+    this.autoPLay();
   }
 
   // ==== EVENTS (DRAG) ====
@@ -205,6 +229,7 @@ export default class Slider {
     this.distances.initial = Math.round(e.clientX);
     this.wrapper.addEventListener('pointermove', this.onMoving);
     this.wrapper.addEventListener('pointerup', this.onFinal);
+    this.pauseAutoPlay();
   }
 
   onMoving(e) {
@@ -216,6 +241,16 @@ export default class Slider {
     this.wrapper.removeEventListener('pointerup', this.onFinal);
     this.changeOnMoving(e);
     this.distances.moving = 0;
+    this.pauseAutoPlay(false);
+
+    if (this.config.autoPlay.pauseOnHover) {
+      this.wrapper.removeEventListener('mousein', () =>
+        this.pauseAutoPlay(true),
+      );
+      this.wrapper.removeEventListener('mouseout', () =>
+        this.pauseAutoPlay(false),
+      );
+    }
   }
 
   // ==== RESIZE ====
