@@ -1,0 +1,36 @@
+[data-control='default'] {
+  position: absolute;
+  z-index: 9;
+  display: flex;
+  justify-self: center;
+  bottom: 3rem;
+  gap: 1rem;
+}
+
+[data-control='default'] a {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background-color: #aaa;
+  pointer-events: auto;
+  transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transform: scale(0.8);
+}
+
+[data-control='default'] a:hover {
+  transform: scale(1.1);
+  background-color: #fff;
+}
+
+[data-control='default'] a.active-dot {
+  background-color: #fff;
+  transform: scale(1.1);
+}
+
+[data-control='default'] a.disabled {
+  pointer-events: none !important;
+  opacity: 0.5;
+  cursor: default;
+  background-color: #ccc;
+  user-select: none;
+}

@@ -1,0 +1,32 @@
+/* custom control */
+
+#custom-control {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  scrollbar-width: none;
+  justify-content: center;
+}
+
+#custom-control::-webkit-scrollbar {
+  display: none;
+}
+
+#custom-control li {
+  flex: 0 0 auto;
+  width: 70px;
+  height: 70px;
+  cursor: pointer;
+  opacity: 0.7;
+  border: 1px solid transparent;
+  transition: opacity 0.3s ease-in-out, border 0.3s ease-in-out;
+}
+#custom-control li:hover,
+#custom-control li.active-dot {
+  opacity: 1;
+  border-color: #fff;
+}

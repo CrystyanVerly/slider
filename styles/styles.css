@@ -1,3 +1,6 @@
 @import url('./modules/reset.css');
 @import url('./modules/bannerStyle.css');
 @import url('./modules/galleryStyle.css');
+@import url('./modules/arrowControls.css');
+@import url('./modules/defaultControl.css');
+@import url('./modules/customControl.css');
