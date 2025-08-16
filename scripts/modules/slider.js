@@ -14,7 +14,7 @@ export default class Slider {
         play: true,
         interval: 4000,
         pause: false,
-        pauseOnHover: true,
+        pauseOnHover: false,
         isHoving: null,
       },
       activeClass: 'active',
