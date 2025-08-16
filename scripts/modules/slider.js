@@ -14,14 +14,15 @@ export default class Slider {
         play: true,
         interval: 4000,
         pause: false,
-        pauseOnHover: false,
+        pauseOnHover: true,
+        isHoving: null,
       },
       activeClass: 'active',
       ...config,
     };
 
     this.distances = { initial: 0, moving: 0, final: 0 };
-    this.index = { active: 0 };
+    this.index = { active: 0, isForward: true };
     this.changeEvent = new Event('changeEvent');
 
     this.intervalID = null;
@@ -63,11 +64,15 @@ export default class Slider {
     });
 
     if (this.config.autoPlay.pauseOnHover) {
-      this.wrapper.addEventListener('mouseenter', () =>
-        this.pauseAutoPlay(true),
+      this.wrapper.addEventListener(
+        'mouseenter',
+        () => this.pauseAutoPlay(true),
+        (this.config.autoPlay.isHoving = true),
       );
-      this.wrapper.addEventListener('mouseleave', () =>
-        this.pauseAutoPlay(false),
+      this.wrapper.addEventListener(
+        'mouseleave',
+        () => this.pauseAutoPlay(false),
+        (this.config.autoPlay.isHoving = false),
       );
     }
   }
@@ -120,6 +125,11 @@ export default class Slider {
   goTo(index, transition = true) {
     const arrSize = this.itemsWithClones.length;
     const lastIndex = arrSize - 1;
+    const active = this.index.active;
+
+    this.index.isForward =
+      (index > active && !(active === 0 && index === lastIndex)) ||
+      (active === lastIndex && index === 0);
 
     if (this.config.looping) {
       if (index < 0) index = 1;
@@ -167,8 +177,13 @@ export default class Slider {
     const lastIndex = this.itemsWithClones.length - 1;
     const activeIndex = this.index.active;
 
-    if (activeIndex === lastIndex) this.goTo(1, false);
-    else if (activeIndex === 0) this.goTo(lastIndex - 1, false);
+    if (activeIndex === lastIndex) {
+      this.moveSlide(this.itemsPosition[1].onLeft, false);
+      this.index.active = 1;
+    } else if (activeIndex === 0) {
+      this.moveSlide(this.itemsPosition[lastIndex - 1].onLeft, false);
+      this.index.active = lastIndex - 1;
+    }
 
     this.toggleActive();
   }
@@ -197,11 +212,18 @@ export default class Slider {
   autoPLay() {
     if (this.config.autoPlay.pause) return;
     const interval = this.config.autoPlay.interval;
+
     if (this.intervalID) clearInterval(this.intervalID);
+
     this.intervalID = setInterval(() => {
-      if (!this.config.looping && this.index.active >= this.items.length - 1)
-        this.goTo(0);
-      else this.nextItem();
+      if (!this.config.looping) {
+        if (this.index.active >= this.items.length - 1)
+          this.index.isForward = false;
+        else if (this.index.active <= 0) this.index.isForward = true;
+      }
+
+      if (this.index.isForward) this.nextItem();
+      else this.prevItem();
     }, interval);
   }
 
@@ -242,15 +264,6 @@ export default class Slider {
     this.changeOnMoving(e);
     this.distances.moving = 0;
     this.pauseAutoPlay(false);
-
-    if (this.config.autoPlay.pauseOnHover) {
-      this.wrapper.removeEventListener('mousein', () =>
-        this.pauseAutoPlay(true),
-      );
-      this.wrapper.removeEventListener('mouseout', () =>
-        this.pauseAutoPlay(false),
-      );
-    }
   }
 
   // ==== RESIZE ====
